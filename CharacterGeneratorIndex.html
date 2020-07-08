@@ -1,0 +1,71 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>ICONS Character Generator</title>
+        <style>
+            .column {
+                float: left;
+                width: 50%;
+            }
+
+                /* Clear floats after the columns */
+            .row:after {
+                content: "";
+                display: table;
+                clear: both;
+            }
+            table {
+                font-family: arial, sans-serif;
+                border-collapse: collapse;
+                width: 100%;
+            }
+
+            td, th {
+                border: 1px solid #dddddd;
+                text-align: left;
+                padding: 8px;
+            }
+
+            tr:nth-child(even) {
+                background-color: #dddddd;
+            }
+            body{
+                background-color: white;
+            }
+        </style>
+    </head>
+    <body onload="rollCharacter(), originStory()">
+        <h1>ICONS Character Generator</h1>
+        <p><button onClick="rollCharacter()">Create New Character</button></br><label><input type="checkbox" id="greatPower">Using the "Great Power" table.</label></p>
+        <div class="row">
+            <span id="Character Sheet">
+                <div class="column">
+                    <h2>Origin</h2>
+                    <span id="Origin">
+                    </span>
+                    <h2>Attributes</h2>
+                    <span id="Attributes">
+                    </span>
+                    <h2>Powers</h2>
+                    <span id="Powers">
+                    </span>
+                </div>
+                <div class="column">
+                    <h2>Specialties</h2>
+                    <span id="Specialties">
+                    </span>
+                    <h2>Qualities</h2>
+                    <span id="Qualities">
+                    </span>
+                </div>
+            </span>
+        </div>
+        <h2>Origin Story</h2>
+        <p><button onClick="originStory()">Create New Origin Story</button></p>
+        <div class="row">
+            <span id="Origin Story">
+            </span>
+        </div>
+        <script type="text/javascript" src="chargen.js"></script>
+    </body>
+</html>
