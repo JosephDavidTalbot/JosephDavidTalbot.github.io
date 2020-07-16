@@ -42,7 +42,7 @@
 
           <!-- Page Heading -->
           <h1 class="h3 mb-4 text-gray-800">ICONS Character Generator</h1>
-          <p class="lead">A random character generator, intended for the superhero RPG, ICONS, but perfectly capable of just being a seed for further superhero ideas.</p>
+          <p class="lead">A random character generator, intended for the superhero RPG, ICONS, but perfectly capable of just being a seed for further superhero ideas. This functionality is entirely clientside; potentially insecure in a real context, but for a simple web toy that does nothing but hand the user a character sheet, it should be fine. The script itself runs through the exact process as written in the rulebook, rolling virtual dice to pick entries out of static storage arrays and string it all together into a character object, before finally printing it all out.</p>
           <p><button onClick="rollCharacter()">Create New Character</button></br><label><input type="checkbox" id="greatPower">Using the "Great Power" table. (This changes the sorts of powers you'll roll. Don't bother if you don't know the game this is based on.)</label></p>
           <span id="Character Sheet">
               <div class="row">
