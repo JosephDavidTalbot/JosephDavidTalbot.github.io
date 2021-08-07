@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <title>Serial Scraper</title>
+
+  <!-- Custom fonts for this template-->
+  <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+  <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+
+  <!-- Custom styles for this template-->
+  <link href="css/sb-admin-2.css" rel="stylesheet">
+  <link href="css/bootstrap.min.css" rel="stylesheet">
+
+</head>
+
+<body id="page-top">
+
+  <!-- Page Wrapper -->
+  <div id="wrapper">
+
+    <!-- Sidebar -->
+    <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar" include-html="html/sidebar.html">
+    </ul>
+    <!-- End of Sidebar -->
+
+    <!-- Content Wrapper -->
+    <div id="content-wrapper" class="d-flex flex-column">
+
+      <!-- Main Content -->
+      <div id="content">
+
+        <!-- Begin Page Content -->
+        <div class="container-fluid">
+
+          <!-- Page Heading -->
+          <h1 class="h3 mb-4 text-gray-800">Web Serial Scraper</h1>
+
+          <p>
+              <h2 class="h4 mb-4 text-gray-800">SUMMARY:</h2>
+          </p>
+
+          <p>
+          This hobby project began when I asked myself, "how long is <em>The Gods Are Bastards,</em> one of my favorite web serials?" So I spent an afternoon writing and testing some Python to produce a SQLite database file containing the entire text, along with metadata like time of posting, wordcount, book, volume, and more.
+          </p>
+
+          <p>
+          (For the uninitiated, a web serial is longform prose fiction, like a novel, except published serially online- that is to say, it is posted chapter by chapter, one at a time. Among the format's common idiosyncrasies is being a great deal longer than normal books and book series. We'll come back to that later.)
+          </p>
+
+          <p>
+          <h2 class="h4 mb-4 text-gray-800">DETAILS:</h2>
+          </p>
+
+          <p>
+          As a programmer, I don't believe in "favorite languages" or other such nonsense. Languages are tools; they are more fit for certain purposes and less fit for others. In this instance, I needed a script that I would only need to run once and likely never again, which suggested Python as the most suitable tool for the job. The fact it would require web scraping sealed the deal; I'm sure other languages are perfectly capable of web scraping with the correct libraries, but Python's web scraping capabilities are what I know, and have been perfectly satisfactory for my needs so far.
+          </p>
+
+          <p>
+          Early on in the project, I knew that I'd want more data to work with than merely a single final wordcount. I wasn't entirely sure <em>what</em> data I would want, and so I went with the most overkill, catch-all solution I could find: a SQLite database. SQLite is a variant on SQL that appealed to me for one simple reason: it didn't require any complicated setup with clients and servers. I just created a SQLite .db file in the right directory, pointed my script at it, and let it run.
+          </p>
+
+          <p>
+          After getting SQLite set up, I could work on gathering the raw data via a Python library called BeautifulSoup. I have no idea why it's called that; programmers are weird, as I'm sure you've noticed. With BeautifulSoup, however, I could hand Python a URL, and get back an entire webpage in a single easy-to-handle object, and then, with some careful tweaking and selection, pare the webpage down to the text of the chapter on the page- the core data we care about.
+          </p>
+
+          <p>
+          With that text in hand, I could pass it to the SQLite database, along with metadata gathered from the rest of the page- what book the chapter belongs to, what volume it's a part of, what date it was posted on, whether or not it's a bonus chapter that doesn't belong to any book in particular, and most pertinent to my original brief, the chapter's individual wordcount.
+          </p>
+
+          <p>
+          Now that my script was creating and stocking my SQLite database, I was done... with Python. A SQLite database without any SQL code is useless. So I set about writing some queries, which I'll reproduce here alongside some translations:
+          </p>
+
+          <p>
+          <h2 class="h4 mb-4 text-gray-800">QUERIES:</h2>
+          </p>
+
+          <p>
+          SELECT SUM(wordcount) FROM chapters;<br/>
+          "Give me the total wordcount of the entire story."<br/>
+          Result: 3,104,829.<br/>
+          (I wasn't joking when I said these things were long.)
+          </p>
+
+          <p>
+          SELECT SUM(wordcount) FROM chapters WHERE isBonus = 0;<br/>
+          "Give me the wordcount of the entire story, without counting bonus chapters."<br/>
+          Result: 2,758,681.
+          </p>
+
+          <p>
+          SELECT SUM(wordcount) FROM chapters WHERE isBonus = 1;<br/>
+          "Give me the wordcount of the entire story, <em>only</em> counting bonus chapters."<br/>
+          Result: 346,148.
+          </p>
+
+          <p>
+          SELECT COUNT(*), SUM(wordcount), STRFTIME('%Y', datePosted) AS year, MIN(book), MAX(book), MIN(date(datePosted)), MAX(date(datePosted)) FROM chapters GROUP BY year ORDER BY year;<br/>
+          "For every year in chronological order, give me the number of chapters released, the year, the first book that was worked on, the last book that was worked on, the first day that was posted on, and the last day that was posted on."
+          </p>
+
+          <p>
+          select book, count(*) as "chapters", sum(wordcount) as "wordcount", (sum(wordcount) / count(*)) as "average chapter length", min(date(datePosted)) as "first post", max(date(datePosted)) as "last post", cast((max(julianday(datePosted)) - min(julianday(datePosted))) as int) as "days long", (cast(cast((max(julianday(datePosted)) - min(julianday(datePosted))) as int) as real) / count(*)) as "days per chapter", (sum(wordcount) / strftime('%m', date(datePosted,'start of month','+1 month','-1 day'))) as "words per day" from chapters group by book order by book;<br/>
+          "For each book in ascending order, tell me how many chapters were in that book, the wordcount of that book, the average chapter's wordcount, the date the first chapter was posted on, the date the last chapter was posted on, how many days on average were between each chapter, and how many words were written on the average day."
+          </p>
+
+          <p>
+          At one point, wanting to have a graphical representation of some data, and being unwilling to look at the documentation for Python's graphing libraries, I exported a SQLite result set to an Excel spreadsheet, and made a graph there. The following graph shows the average words per day for each month in chronological order.
+          </p>
+
+          <p>
+          <img src="img/wordcount_graph.png">
+          </p>
+
+          <p>
+          <br/>
+          </p>
+
+          <p>
+          <br/>
+          </p>
+
+          <p>
+          <h2 class="h4 mb-4 text-gray-800">SOURCE CODE:</h2>
+          </p>
+
+          <p>
+          Attached here, at the bottom of the page, is my source code.
+          </p>
+
+          <p>
+          <a href="downloads/Joseph Talbot - Wordcount Scraper.py" download>Python script</a>
+          </p>
+
+          <p>
+          <a href="downloads/Joseph Talbot - Wordcount Database.db" download>SQLite DB file</a>
+          </p>
+
+          <p>
+          <a href="downloads/Joseph Talbot - Wordcount Spreadsheet.xlsx" download>Monthly Average Wordcount Spreadsheet</a>
+          </p>
+
+        </div>
+        <!-- /.container-fluid -->
+
+      </div>
+      <!-- End of Main Content -->
+
+      <!-- Footer -->
+      <footer class="sticky-footer bg-white">
+        <div class="container my-auto">
+          <div class="copyright text-center my-auto">
+            <span>Copyright &copy; Joe Talbot 2020</span>
+          </div>
+        </div>
+      </footer>
+      <!-- End of Footer -->
+
+    </div>
+    <!-- End of Content Wrapper -->
+
+  </div>
+  <!-- End of Page Wrapper -->
+
+  <!-- Scroll to Top Button-->
+  <a class="scroll-to-top rounded" href="#page-top">
+    <i class="fas fa-angle-up"></i>
+  </a>
+
+  <!-- Logout Modal-->
+  <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">Ready to Leave?</h5>
+          <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
+        <div class="modal-body">Select "Logout" below if you are ready to end your current session.</div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
+          <a class="btn btn-primary" href="login.html">Logout</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap core JavaScript-->
+  <script src="vendor/jquery/jquery.min.js"></script>
+  <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Core plugin JavaScript-->
+  <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
+
+  <!-- Custom scripts for all pages-->
+  <script src="js/sb-admin-2.min.js"></script>
+  <script src="js/includeHTML.js"></script>
+
+</body>
+
+</html>
